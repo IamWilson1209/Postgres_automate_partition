@@ -2,7 +2,7 @@
 <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" /> <img src="https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E" /> <img src="https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" /> <img src="https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white" />
 
 ## Purpose
-Implement horizontal partitioning through PostgreSQL.
+Implement horizontal partitioning using PostgreSQL.
 
 ## Functionality
 Creates 100 partitions for a database with 1 billion data.<br>
