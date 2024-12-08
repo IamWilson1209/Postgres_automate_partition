@@ -1,12 +1,13 @@
 import pg from 'pg';
+
 /*
 This script creates { 100 } partitions 
-then attaches them to main table "customers"
+then attaches them to main table "inventory" (貨物清單)
 
 Please make sure you've spin up docker's postgresql through following command:
 # docker run --name pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
 
-The run this command in terminal
+Then run this command in terminal
 # node create_partitions.mjs
 */
 async function createPartitions() {
@@ -22,60 +23,61 @@ async function createPartitions() {
     console.log('Connecting to postgres database...');
     await dbClientPostgres.connect();
 
-    /* Dropping existing database if needed, not recommend in real word case */
-    // console.log('Dropping database customers...');
-    // await dbClientPostgres.query("drop database customers")
+    /* Dropping existing database if needed, not recommend in real world case */
+    // console.log('Dropping database inventory...');
+    // await dbClientPostgres.query("drop database inventory");
 
-    /* Start creating fake customer data */
-    console.log('Start creating database customers...');
-    await dbClientPostgres.query('create database customers');
+    /* Start creating fake inventory data */
+    console.log('Start creating database inventory...');
+    await dbClientPostgres.query('create database inventory');
 
-    /* 2. Connecting to customer database using pg.Client */
-    const dbClientCustomers = new pg.Client({
+    /* 2. Connecting to inventory database using pg.Client */
+    const dbClientInventory = new pg.Client({
       user: 'postgres',
       password: 'postgres',
       host: 'localhost',
       port: 5432,
-      database: 'customers', // Connect to "customer" database
+      database: 'inventory', // Connect to "inventory" database
     });
-    console.log('Connecting to customers db...');
-    await dbClientCustomers.connect();
+    console.log('Connecting to inventory db...');
+    await dbClientInventory.connect();
 
-    /* 3. Create customers table with range partitioning */
-    console.log('Creating customers table...');
-    // id: serial(auto increment), name: text
-    const sql = `create table customers (id serial, name text) 
+    /* 3. Create inventory table with range partitioning */
+    console.log('Creating inventory table...');
+    // id: serial(auto increment), name: text, category: text, price: numeric, quantity: integer
+    const sql = `create table inventory (id serial, name text, category text, price numeric, quantity integer) 
                  partition by range (id)`;
-    await dbClientCustomers.query(sql);
+    await dbClientInventory.query(sql);
     console.log('Creating partitions... ');
+
     /*
-    Make this database support 1 Billion customers
-    each partition will have 10M customers 
-    that gives 1000/10 -> 100 partition tables 
+    Make this database support 1 Billion items
+    each partition will have 10M items 
+    that gives 1000/10 -> 100 partition tables
     */
     for (let partition_i = 0; partition_i < 100; partition_i++) {
       const idFrom = partition_i * 10000000;
       const idTo = (partition_i + 1) * 10000000;
-      const partitionName = `customers_${idFrom}_${idTo}`;
+      const partitionName = `inventory_${idFrom}_${idTo}`;
 
-      /* Create customer table for each partition */
+      /* Create inventory table for each partition */
       const psql1 = `create table ${partitionName}
-                         (like customers including indexes)`;
+                         (like inventory including indexes)`;
 
-      /* Attach customers just created to different partitions */
-      const psql2 = `alter table customers
+      /* Attach inventory just created to different partitions */
+      const psql2 = `alter table inventory
             attach partition ${partitionName}
             for values from (${idFrom}) to (${idTo})
          `;
 
-      console.log(`creating partition ${partitionName} `);
-      await dbClientCustomers.query(psql1);
-      await dbClientCustomers.query(psql2);
+      console.log(`creating partition ${partitionName}`);
+      await dbClientInventory.query(psql1);
+      await dbClientInventory.query(psql2);
     }
 
     /* 4. Closing connection */
     console.log('Closing connection');
-    await dbClientCustomers.end();
+    await dbClientInventory.end();
     await dbClientPostgres.end();
     console.log('Automate partitioning: done.');
   } catch (err) {
@@ -87,13 +89,13 @@ createPartitions();
 
 /*
 Get into container's command line interface
-docker exec -it pgpart psql -U postgres -d customers
+docker exec -it pgpart psql -U postgres -d inventory
 
-Describe customers
-\d customers
+Describe inventory
+\d inventory
 
-Show all customers partitions
-\d+ customers
+Show all inventory partitions
+\d+ inventory
 
-select * from customers_0_10000000 limit 10;
+select * from inventory_0_10000000 limit 10;
 */
