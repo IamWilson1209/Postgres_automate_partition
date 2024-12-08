@@ -23,17 +23,17 @@ Run this command in the terminal
 
 Get into the container's command line interface<br>
 ```docker exec -it [container_name] psql -U [username] -d [database]```
-ex. docker exec -it pg_partition psql -U postgres -d customers
+ex. docker exec -it pg_partition psql -U postgres -d inventory
 
-Describe customers<br>
-```\d customers```
+Describe inventory<br>
+```\d inventory```
 
-Show all customers partitions<br>
-```\d+ customers```
+Show all inventory partitions<br>
+```\d+ inventory```
 
 Testing<br>
-select * from customers_0_10000000 limit 10
+select * from inventory_0_10000000 limit 10
 
-### 4. Run populate_customers.js
+### 4. Run populate_inventory.js
 Run this command in the terminal
-```node populate_customers.js```
+```node populate_inventory.js```
